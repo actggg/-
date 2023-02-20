@@ -1,17 +1,16 @@
 import re  # Регулярные выражения.
 import sys
+from statistics import mode
+
 import nltk
 import requests  # Загрузка новостей с сайта.
 from PyQt5 import uic
-from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
+from PyQt5.QtCore import QSize
+from PyQt5.QtWidgets import QApplication, QWidget
 from PyQt5.QtWidgets import QMainWindow, QGridLayout, QTableWidget, QTableWidgetItem
 from bs4 import BeautifulSoup
-from collections import Counter
-from prediction import pred
 
-import statistics
-from statistics import mode
+from prediction import pred
 
 
 def know_text_in_link(link):
@@ -33,10 +32,12 @@ def know_text_in_link(link):
 classes = ['business', 'entertainment', 'politics', 'medical', 'graphics', 'historical', 'food', 'space', 'sport',
            'technologie']
 
+
 class MainWidget(QMainWindow):
     def __init__(self):
         super().__init__()
         uic.loadUi('untitled.ui', self)
+        self.setWindowTitle("Классификатор по тематикам")
         self.text_button.clicked.connect(self.text_helper)
         self.link_button.clicked.connect(self.link_helper)
         self.file_button.clicked.connect(self.file_helper)
@@ -69,7 +70,9 @@ class MainWidget(QMainWindow):
 
     def link_helper(self):
         s = []
-        rist = [classes[pred([str(know_text_in_link(self.link_input.text()))])[0]], classes[pred([str(know_text_in_link(self.link_input.text()))])[1]], classes[pred([str(know_text_in_link(self.link_input.text()))])[2]]]
+        rist = [classes[pred([str(know_text_in_link(self.link_input.text()))])[0]],
+                classes[pred([str(know_text_in_link(self.link_input.text()))])[1]],
+                classes[pred([str(know_text_in_link(self.link_input.text()))])[2]]]
         if rist.count(mode(rist)) != 1:
             t = mode(rist)
         else:
@@ -111,7 +114,7 @@ class Table(QMainWindow):
         QMainWindow.__init__(self)
 
         self.setMinimumSize(QSize(600, 200))  # Set sizes
-        self.setWindowTitle("Работа с QTableWidget")  # Set the window title
+        self.setWindowTitle("Результаты с классификацией")  # Set the window title
         central_widget = QWidget(self)  # Create a central widget
         self.setCentralWidget(central_widget)  # Install the central widget
 
@@ -123,7 +126,7 @@ class Table(QMainWindow):
         table.setRowCount(len(metods))  # and one row
 
         # Set the table headers
-        table.setHorizontalHeaderLabels(["link", "", "Method 2", "Method 3", 'sum'])
+        table.setHorizontalHeaderLabels(["Адрес/текст", "GaussianNB", "SVM", "LogReg", 'Итого:'])
 
         # Set the tooltips to headings
         table.horizontalHeaderItem(1).setToolTip("Column 1 ")
@@ -139,14 +142,15 @@ class Table(QMainWindow):
             table.setItem(i, 3, QTableWidgetItem(metods[i]['Method_3']))
             table.setItem(i, 4, QTableWidgetItem(metods[i]['sum']))
 
-
         # Do the resize of the columns by content
+        '''
         table.resizeColumnsToContents()
         self.btn = QPushButton('Сохранить', self)
         self.btn.resize(150, 50)
         self.btn.move(100, 50)
+        '''
+        grid_layout.addWidget(table, 700, 200)  # Adding the table to the grid
 
-        grid_layout.addWidget(table, 500, 200)  # Adding the table to the grid
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
