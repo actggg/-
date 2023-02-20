@@ -4,7 +4,7 @@ import nltk
 import requests  # Загрузка новостей с сайта.
 from PyQt5 import uic
 from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtWidgets import QApplication, QWidget
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
 from PyQt5.QtWidgets import QMainWindow, QGridLayout, QTableWidget, QTableWidgetItem
 from bs4 import BeautifulSoup
 from collections import Counter
@@ -123,7 +123,7 @@ class Table(QMainWindow):
         table.setRowCount(len(metods))  # and one row
 
         # Set the table headers
-        table.setHorizontalHeaderLabels(["link", "Method 1", "Method 2", "Method 3", 'sum'])
+        table.setHorizontalHeaderLabels(["link", "", "Method 2", "Method 3", 'sum'])
 
         # Set the tooltips to headings
         table.horizontalHeaderItem(1).setToolTip("Column 1 ")
@@ -132,9 +132,6 @@ class Table(QMainWindow):
         table.horizontalHeaderItem(4).setToolTip("sum")
 
         # Set the alignment to the headers
-        table.horizontalHeaderItem(0).setTextAlignment(Qt.AlignLeft)
-        table.horizontalHeaderItem(1).setTextAlignment(Qt.AlignHCenter)
-        table.horizontalHeaderItem(2).setTextAlignment(Qt.AlignRight)
         for i in range(len(metods)):
             table.setItem(i, 0, QTableWidgetItem(metods[i]['link']))
             table.setItem(i, 1, QTableWidgetItem(metods[i]['Method_1']))
@@ -144,12 +141,10 @@ class Table(QMainWindow):
 
 
         # Do the resize of the columns by content
-        '''
         table.resizeColumnsToContents()
         self.btn = QPushButton('Сохранить', self)
         self.btn.resize(150, 50)
         self.btn.move(100, 50)
-        '''
 
         grid_layout.addWidget(table, 500, 200)  # Adding the table to the grid
 
