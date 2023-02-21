@@ -6,7 +6,7 @@ import nltk
 import requests  # Загрузка новостей с сайта.
 from PyQt5 import uic
 from PyQt5.QtCore import QSize
-from PyQt5.QtWidgets import QApplication, QWidget
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
 from PyQt5.QtWidgets import QMainWindow, QGridLayout, QTableWidget, QTableWidgetItem
 from bs4 import BeautifulSoup
 
@@ -113,7 +113,7 @@ class Table(QMainWindow):
         # You must call the super class method
         QMainWindow.__init__(self)
 
-        self.setMinimumSize(QSize(600, 200))  # Set sizes
+        self.setMinimumSize(QSize(650, 100 + len(metods) * 50))  # Set sizes
         self.setWindowTitle("Результаты с классификацией")  # Set the window title
         central_widget = QWidget(self)  # Create a central widget
         self.setCentralWidget(central_widget)  # Install the central widget
@@ -142,14 +142,12 @@ class Table(QMainWindow):
             table.setItem(i, 3, QTableWidgetItem(metods[i]['Method_3']))
             table.setItem(i, 4, QTableWidgetItem(metods[i]['sum']))
 
-        # Do the resize of the columns by content
-        '''
+
         table.resizeColumnsToContents()
-        self.btn = QPushButton('Сохранить', self)
+        self.btn = QPushButton('Сохранить результат', self)
         self.btn.resize(150, 50)
-        self.btn.move(100, 50)
-        '''
-        grid_layout.addWidget(table, 700, 200)  # Adding the table to the grid
+        self.btn.move(500, 10)
+        grid_layout.addWidget(table, 650, 100 + len(metods) * 50)  # Adding the table to the grid
 
 
 if __name__ == '__main__':
