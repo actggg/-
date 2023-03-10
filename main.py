@@ -1,7 +1,7 @@
 import re  # Регулярные выражения.
 import sys
 from statistics import mode
-
+from urllib.request import urlopen
 import nltk
 import requests  # Загрузка новостей с сайта.
 from PyQt5 import uic
@@ -15,18 +15,22 @@ from prediction import pred
 
 def know_text_in_link(link):
     resp = requests.get(link)
-    # Загружаем текст в объект типа BeautifulSoup.
-    bs = BeautifulSoup(resp.text, "html5lib")
-    # Получаем заголовок статьи.
-    if bs.h1:
-        aTitle = bs.h1.text.replace("\xa0", " ")
-        # Получаем текст статьи.
-        findheaders = re.compile("<output+?>", re.S)
-        anArticle = BeautifulSoup(" ".join([p.text for p in bs.find_all("p")]), "html5lib").get_text().replace("\xa0",
-                                                                                                               " ")
-        anArticle = anArticle.replace('↑', '')
-        return anArticle
-    return 0
+    if 300 > resp.status_code >= 200:
+        html = urlopen(link).read()
+        soup = BeautifulSoup(html, features="html.parser")
+        # kill all script and style elements
+        for script in soup(["script", "style"]):
+            script.extract()  # rip it out
+        # get text
+        text = soup.get_text()
+        # break into lines and remove leading and trailing space on each
+        lines = (line.strip() for line in text.splitlines())
+        # break multi-headlines into a line each
+        chunks = (phrase.strip() for line in lines for phrase in line.split("  "))
+        # drop blank lines
+        text = '\n'.join(chunk for chunk in chunks if chunk)
+        return text
+    return f'Ошибка программы {resp.status_code}'
 
 
 classes = ['business', 'entertainment', 'politics', 'medical', 'graphics', 'historical', 'food', 'space', 'sport',
@@ -49,8 +53,11 @@ class MainWidget(QMainWindow):
     def file_helper(self):
         with open(self.file_input.text(), 'r', encoding='utf8') as f:
             k = f.read().split()
+            r = 0
             s = []
             for i in k:
+                r += 1
+                print(f'Обрабатывает ссылку номер {r}')
                 if know_text_in_link(i) != 0:
                     rist = [classes[pred([str(know_text_in_link(i))])[0]],
                             classes[pred([str(know_text_in_link(i))])[1]],
