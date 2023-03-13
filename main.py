@@ -6,9 +6,10 @@ import nltk
 import requests  # Загрузка новостей с сайта.
 from PyQt5 import uic
 from PyQt5.QtCore import QSize
-from PyQt5.QtWidgets import QApplication, QWidget, QPushButton
+from PyQt5.QtWidgets import QApplication, QWidget, QPushButton, QLabel
 from PyQt5.QtWidgets import QMainWindow, QGridLayout, QTableWidget, QTableWidgetItem
 from bs4 import BeautifulSoup
+import sqlite3
 
 from prediction import pred
 
@@ -45,6 +46,7 @@ class MainWidget(QMainWindow):
         self.text_button.clicked.connect(self.text_helper)
         self.link_button.clicked.connect(self.link_helper)
         self.file_button.clicked.connect(self.file_helper)
+        self.setFixedSize(800, 560)
         nltk.download("stopwords")  # поддерживает удаление стоп-слов
         nltk.download('punkt')  # делит текст на список предложений
         nltk.download('wordnet')  # проводит лемматизацию
@@ -128,33 +130,66 @@ class Table(QMainWindow):
         grid_layout = QGridLayout(self)  # Create QGridLayout
         central_widget.setLayout(grid_layout)  # Set this layout in central widget
 
-        table = QTableWidget(self)  # Create a table
-        table.setColumnCount(5)  # Set three columns
-        table.setRowCount(len(metods))  # and one row
+        self.table = QTableWidget(self)  # Create a table
+        self.table.setColumnCount(6)  # Set three columns
+        self.table.setRowCount(len(metods))  # and one row
 
         # Set the table headers
-        table.setHorizontalHeaderLabels(["Адрес/текст", "GaussianNB", "SVM", "LogReg", 'Итого:'])
+        self.table.setHorizontalHeaderLabels(["Адрес/текст", "GaussianNB", "SVM", "LogReg", 'Итого:', 'Редакция'])
 
         # Set the tooltips to headings
-        table.horizontalHeaderItem(1).setToolTip("Column 1 ")
-        table.horizontalHeaderItem(2).setToolTip("Column 2 ")
-        table.horizontalHeaderItem(3).setToolTip("Column 3 ")
-        table.horizontalHeaderItem(4).setToolTip("sum")
+        self.table.horizontalHeaderItem(1).setToolTip("Column 1 ")
+        self.table.horizontalHeaderItem(2).setToolTip("Column 2 ")
+        self.table.horizontalHeaderItem(3).setToolTip("Column 3 ")
+        self.table.horizontalHeaderItem(4).setToolTip("sum")
 
         # Set the alignment to the headers
         for i in range(len(metods)):
-            table.setItem(i, 0, QTableWidgetItem(metods[i]['link']))
-            table.setItem(i, 1, QTableWidgetItem(metods[i]['Method_1']))
-            table.setItem(i, 2, QTableWidgetItem(metods[i]['Method_2']))
-            table.setItem(i, 3, QTableWidgetItem(metods[i]['Method_3']))
-            table.setItem(i, 4, QTableWidgetItem(metods[i]['sum']))
+            self.table.setItem(i, 0, QTableWidgetItem(metods[i]['link']))
+            self.table.setItem(i, 1, QTableWidgetItem(metods[i]['Method_1']))
+            self.table.setItem(i, 2, QTableWidgetItem(metods[i]['Method_2']))
+            self.table.setItem(i, 3, QTableWidgetItem(metods[i]['Method_3']))
+            self.table.setItem(i, 4, QTableWidgetItem(metods[i]['sum']))
+            self.table.setItem(i, 5, QTableWidgetItem('-'))
 
-
-        table.resizeColumnsToContents()
+        self.table.resizeColumnsToContents()
+        self.label = QLabel(self)
+        self.label.setText(
+            "В случае неверного ответа, поставте в поле 'Редакция' верный вариант и нажмите кнопку сохранить.")
+        self.label.resize(700, 50)
+        self.label.move(40, len(metods) * 36 + 42)
+        #self.label2.setText(
+         #   "Варианты: business, entertainment, politics, medical, graphics, historical, food, space, sport, technologie")
+        #self.label2.resize(700, 50)
+        #self.label2.move(40, len(metods) * 36 + 52)
         self.btn = QPushButton('Сохранить результат', self)
         self.btn.resize(150, 50)
-        self.btn.move(500, 10)
-        grid_layout.addWidget(table, 650, 100 + len(metods) * 50)  # Adding the table to the grid
+        self.btn.move(40, len(metods) * 36 + 92)
+        self.btn.clicked.connect(self.save)
+        grid_layout.addWidget(self.table, 650, 100 + len(metods) * 50)  # Adding the table to the grid
+
+    def save(self):
+        classess = {'business': 1, 'entertainment': 2,
+                   'politics': 3, 'medical': 4,
+                   'graphics': 5, 'historical': 6,
+                   'food': 7, 'space': 8,
+                   'sport': 9, 'technologie': 10}
+        cols = self.table.columnCount()
+        for i in range(cols):
+            if self.table.item(i, 0):
+                if self.table.item(i, 5).text() != '-' and self.table.item(i, 5).text() in classes:
+                    if 'http' in self.table.item(i, 0).text():
+                        text = know_text_in_link(self.table.item(i, 0).text())
+                    else:
+                        text = self.table.item(i, 0).text()
+                    if self.table.item(i, 5).text() in classes:
+                        con = sqlite3.connect("database.db")
+                        cursor = con.cursor()
+                        cursor.execute("INSERT INTO [set](content, class) VALUES(?, ?)", (text, classess[self.table.item(i, 5).text()]))
+                        con.commit()
+                        cursor.close()
+                        con.close()
+
 
 
 if __name__ == '__main__':
